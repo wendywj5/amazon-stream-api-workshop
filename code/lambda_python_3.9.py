@@ -27,7 +27,6 @@ waitTimeSeconds = 0
 #S3 bucket location for cleaned data
 s3_location = 's3://aaa-api-bucket/'
 
-
 # Retrieve Data from SQS
 def receive_messages(queueUrl, max_num, visibilityTimeout, waitTimeSeconds):
     try:
@@ -128,7 +127,7 @@ def lambda_handler(event, context):
             more_messages = False
     
     df = create_df(messages)
-    if not df:
+    if df is None:
         return {    'statusCode': 400,
                     'body': json.dumps('SQS is Empty!') }
     
@@ -154,7 +153,7 @@ def lambda_handler(event, context):
 
     databases = wr.catalog.databases()
 
-    sp_traffic_db = 'stream-sp-traffic'
+    sp_traffic_db = 'stream_sp_traffic'
     sp_traffic_table = 'sp-traffic'
 
     if sp_traffic_db not in databases.values:
