@@ -13,7 +13,7 @@ logger = logging.getLogger(__name__)
 client = boto3.client('sqs')
 
 #SQS queue url
-queueUrl = 'https://sqs.us-east-1.amazonaws.com/521981389199/sp-traffic-mock'
+queueUrl = 'https://sqs.us-east-1.amazonaws.com/521981389199/sp-traffic-sqs'
 
 #Max batch size for a sqs call
 max_num = 10
@@ -22,7 +22,7 @@ max_num = 10
 visibilityTimeout = 90
 
 #A period of time call waits for a message to arrive in the queue before returning
-waitTimeSeconds = 0
+waitTimeSeconds = 5
 
 #S3 bucket location for cleaned data
 s3_location = 's3://aaa-api-bucket/'
@@ -143,9 +143,9 @@ def lambda_handler(event, context):
 
     df = df.drop_duplicates()
 
-    year = datetime.datetime.now().year
-    month = datetime.datetime.now().month
-    day = datetime.datetime.now().day
+    year = str(datetime.datetime.now().year)
+    month = str(datetime.datetime.now().month)
+    day = str(datetime.datetime.now().day)
 
     df.insert(len(df.columns) ,'year', year)
     df.insert(len(df.columns) ,'month', month)
@@ -154,13 +154,11 @@ def lambda_handler(event, context):
     databases = wr.catalog.databases()
 
     sp_traffic_db = 'stream_sp_traffic'
-    sp_traffic_table = 'sp-traffic'
+    sp_traffic_table = 'sp_traffic'
 
     if sp_traffic_db not in databases.values:
         wr.catalog.create_database(sp_traffic_db)
-        print(wr.catalog.databases())
-    else:
-        print("Database stream-sp-traffic already exists")
+        logger.info("created stream_budget_usage database")
 
     wr.s3.to_parquet(
         df=df,
